@@ -14,11 +14,21 @@ data:
   SDM_MAINTENANCE_WINDOW_START: {{ .Values.strongdm.config.maintenanceWindowStart | quote }}
   SDM_VERBOSE: {{ .Values.strongdm.config.verboseLogs | quote }}
   SDM_DOCKERIZED: {{ eq .Values.strongdm.config.queryLogs.storage "stdout" | ternary "stderr" "true" | quote }}
-  SDM_RELAY_LOG_FORMAT: {{ .Values.strongdm.config.queryLogs.format }}
-  SDM_RELAY_LOG_STORAGE: {{ .Values.strongdm.config.queryLogs.storage }}
-  SDM_RELAY_LOG_ENCRYPTION: {{ .Values.strongdm.config.queryLogs.encryption }}
-  SDM_ORCHESTRATOR_PROBES: :9090
-  SDM_METRICS_LISTEN_ADDRESS: {{ .Values.strongdm.config.enableMetrics | ternary ":9999" "" }}
+  {{- /* Unset options are omitted. An empty value renders as YAML null, which
+  the API server drops, so Argo CD would show the ConfigMap out of sync. */}}
+  {{- with .Values.strongdm.config.queryLogs.format }}
+  SDM_RELAY_LOG_FORMAT: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.strongdm.config.queryLogs.storage }}
+  SDM_RELAY_LOG_STORAGE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.strongdm.config.queryLogs.encryption }}
+  SDM_RELAY_LOG_ENCRYPTION: {{ . | quote }}
+  {{- end }}
+  SDM_ORCHESTRATOR_PROBES: ":9090"
+  {{- if .Values.strongdm.config.enableMetrics }}
+  SDM_METRICS_LISTEN_ADDRESS: ":9999"
+  {{- end }}
   {{- range $k, $v := .Values.strongdm.config.additionalEnvVars }}
   {{ $k }}: {{ $v | quote }}
   {{- end }}
